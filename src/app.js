@@ -1,4 +1,5 @@
 import orders from '../data/orders.json';
+import users from '../data/users.json';
 
 import './app.css';
 
@@ -13,6 +14,13 @@ const formCardNumber = (cardNumber) => {
  return cardNumber.replace(/([\d]{2})(\d+)([\d]{4})/, (all, begin, middle, end) => {
     return begin.concat(('*').repeat(middle.length), end);
     });
+};
+
+const formUserInfo = (userId) => {
+  const user = users.find(el => el.id === userId);
+  const fullName = user.first_name.concat(' ', user.last_name);
+
+  return user.gender === 'Male' ? 'Mr.'.concat(' ', fullName): 'Ms.'.concat(' ', fullName);
 };
 
 const renderTable = () => {
@@ -34,7 +42,7 @@ const renderTable = () => {
     table += `
     <tr id="order_${orders[i].id}">
       <td>${orders[i].transaction_id}</td>
-      <td class="user_data">${orders[i].user_id}</td>
+      <td class="user_data"><a href="#">${formUserInfo(orders[i].user_id)}</a></td>
       <td>${formDate(orders[i].created_at)}</td>
       <td>$${orders[i].total}</td>
       <td>${formCardNumber(orders[i].card_number)}</td>
