@@ -14,3 +14,7 @@ th, td {
 th {
   background-color: #f2f8f9;
 }
+
+.hidding {
+  display: none;
+}
