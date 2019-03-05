@@ -5,6 +5,7 @@ import initialCompanies from '../data/companies.json';
 import { formDate, formCardNumber, formUserFullName, formUserBirthday } from './utils/formData';
 import { isElementExist, removeChildren } from './utils/helpers';
 import { singleSort, doubleSort } from './utils/sorts';
+import * as statistics from './utils/statistics';
 
 import './app.css';
 
@@ -136,9 +137,45 @@ const renderTableContent = () => {
   renderTableBody();
 };
 
+const renderTableFooter = () => {
+  const numberMergedCells = 6;
+
+  let tableFooter = `
+    <tfoot>
+      <tr>
+        <td colspan=${numberMergedCells}>Orders Count:</td>
+        <td>$ ${statistics.calculateOrdersCount(orders)}</td>
+      </tr>
+      <tr>
+        <td colspan=${numberMergedCells}>Orders Total:</td>
+        <td>$ ${statistics.calculateOrdersTotal(orders)}</td>
+      </tr>
+      <tr>
+        <td colspan=${numberMergedCells}>Median Value:</td>
+        <td>$ ${statistics.calculateOrdersMedian(orders)}</td>
+      </tr>
+      <tr>
+        <td colspan=${numberMergedCells}>Average Check:</td>
+        <td>$ ${statistics.calculateOrdersAverage(orders)}</td>
+      </tr>
+      <tr>
+        <td colspan=${numberMergedCells}>Average Check (Female):</td>
+        <td>$ ${statistics.calculateFemaleAverageOrders(orders, users)}</td>
+      </tr>
+      <tr>
+        <td colspan=${numberMergedCells}>Average Check (Male):</td>
+        <td>$ ${statistics.calculateMaleAverageOrders(orders, users)}</td>
+      </tr>
+    </tfoot>
+  `;
+
+  document.querySelector('tbody').insertAdjacentHTML('afterend', tableFooter);
+};
+
 const renderTable = () => {
   renderBlankTableWithHeaders();
   renderTableContent();
+  renderTableFooter();
 };
 
 const renderSortIcon = (element) => {

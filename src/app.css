@@ -27,6 +27,11 @@ th[data-sort]:hover {
   opacity: 0.6;
 }
 
+tfoot td {
+  font-weight: 700;
+  text-align: end;
+}
+
 .link {
   text-decoration: none;
   color: #0963f4;
