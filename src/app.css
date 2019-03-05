@@ -1,5 +1,12 @@
+body {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-width: 700px;
+  overflow: auto;
+}
+
 table {
-  margin: 0px auto;
+  margin: 20px;
 }
 
 table, th, td {
@@ -13,6 +20,21 @@ th, td {
 
 th {
   background-color: #f2f8f9;
+}
+
+th[data-sort]:hover {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.link {
+  text-decoration: none;
+  color: #0963f4;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: #1919e6;
 }
 
 .hidding {
