@@ -4,8 +4,8 @@ const calculateOrdersCount = (orders) => {
 
 const calculateOrdersTotal = (orders) => {
   return orders
-    .map(el => el.total)
-    .reduce((acc, cur) => Number(acc) + Number(cur)).toFixed(3);
+    .map(order => Number(order.total))
+    .reduce((acc, cur) => acc + cur).toFixed(3);
 };
 
 const calculateOrdersMedian = (orders) => {
@@ -28,16 +28,32 @@ const calculateOrdersAverage = (orders) => {
 
 const calculateMaleAverageOrders = (orders, users) => {
   const maleUsers = users.filter(user => user.gender === 'Male');
-  const maleOrders = maleUsers.map(user => (orders.find(order => order.user_id === user.id)));
+  const maleOrders = [];
 
-  return calculateOrdersAverage(maleOrders);
+  orders.forEach(order => {
+    maleUsers.forEach(user => {
+      if (order.user_id === user.id) {
+        maleOrders.push(order);
+      }
+    });
+  });
+
+  return maleOrders.length ? calculateOrdersAverage(maleOrders) : 0;
 };
 
 const calculateFemaleAverageOrders = (orders, users) => {
   const femaleUsers = users.filter(user => user.gender === 'Female');
-  const femaleOrders = femaleUsers.map(user => (orders.find(order => order.user_id === user.id)));
+  const femaleOrders = [];
+  
+  orders.forEach(order => {
+    femaleUsers.forEach(user => {
+      if (order.user_id === user.id) {
+        femaleOrders.push(order);
+      }
+    });
+  });
 
-  return calculateOrdersAverage(femaleOrders);
+  return femaleOrders.length ? calculateOrdersAverage(femaleOrders) : 0;
 };
 
 export { 
