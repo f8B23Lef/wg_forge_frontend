@@ -22,4 +22,8 @@ const formUserBirthday = (birthday) => {
   return new Date(Number(birthday)).toLocaleDateString('en-GB');
 };
 
-export { formDate, formCardNumber, formUserFullName, formUserBirthday };
+const formMoney = (number) => {
+  return `$ ${number}`;
+};
+
+export { formDate, formCardNumber, formUserFullName, formUserBirthday, formMoney };
