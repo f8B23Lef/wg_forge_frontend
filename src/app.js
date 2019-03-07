@@ -1,8 +1,6 @@
 import 'bootstrap';
-import initialOrders from '../data/orders.json';
-import initialUsers from '../data/users.json';
-import initialCompanies from '../data/companies.json';
 
+import { loadData, getInitialOrders, getInitialUsers, getInitialCompanies } from './utils/loadData';
 import { formDate, formCardNumber, formUserFullName, formUserBirthday, formMoney } from './utils/formData';
 import { isElementExist, removeChildren } from './utils/helpers';
 import { singleSort, doubleSort } from './utils/sorts';
@@ -11,9 +9,7 @@ import searchOrders from './utils/search';
 
 import './app.css';
 
-let orders = [...initialOrders];
-let users = [...initialUsers];
-let companies = [...initialCompanies];
+let orders, users, companies;
 
 const sortInf = {
   'transaction': {
@@ -251,7 +247,7 @@ const sortTableContent = (sortData) => {
 };
 
 const inputSearch = (inputStr) => {
-  orders = [...searchOrders(inputStr, initialOrders, users)];
+  orders = [...searchOrders(inputStr, getInitialOrders(), users)];
 
   if (sortedColumn) {
     sortTableContent(sortedColumn);
@@ -269,7 +265,7 @@ const setSearchInputListener = () => {
       inputSearch((e.target.value).toLowerCase());
     } 
     else {
-      orders = [...initialOrders];
+      orders = [...getInitialOrders()];
 
       if (sortedColumn) {
         sortTableContent(sortedColumn);
@@ -311,6 +307,12 @@ const setListeners = () => {
 };
 
 export default (function () {
-  renderTable();
-  setListeners();
+  loadData().then(() => {
+    orders = getInitialOrders();
+    users = getInitialUsers();
+    companies = getInitialCompanies();
+
+    renderTable();
+    setListeners();
+  });
 }());
