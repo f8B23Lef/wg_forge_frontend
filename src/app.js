@@ -2,16 +2,17 @@ import initialOrders from '../data/orders.json';
 import initialUsers from '../data/users.json';
 import initialCompanies from '../data/companies.json';
 
-import { formDate, formCardNumber, formUserFullName, formUserBirthday } from './utils/formData';
+import { formDate, formCardNumber, formUserFullName, formUserBirthday, formMoney } from './utils/formData';
 import { isElementExist, removeChildren } from './utils/helpers';
 import { singleSort, doubleSort } from './utils/sorts';
 import * as statistics from './utils/statistics';
+import searchOrders from './utils/search';
 
 import './app.css';
 
-let orders = initialOrders.map(el => el);
-let users = initialUsers.map(el => el);
-let companies = initialCompanies.map(el => el);
+let orders = [...initialOrders];
+let users = [...initialUsers];
+let companies = [...initialCompanies];
 
 const sortInf = {
   'transaction': {
@@ -48,10 +49,16 @@ const sortInf = {
   },
 };
 
+let sortedColumn = null;
+
 const renderBlankTableWithHeaders = () => {
   let table = `
     <table>
       <thead>
+        <tr>
+          <th><label for="search">Search:</label></th>
+          <th colspan="6"><input type="text" id="search" autofocus autocomplete="off"></th>
+        </tr>
         <tr>
           <th data-sort="transaction">Transaction ID</th>
           <th data-sort="user">User Info</th>
@@ -108,25 +115,33 @@ const getCompany = (companyId) => {
 const renderTableBody = () => {
   let tableBody = '';
 
-  for (let i = 0; i < orders.length; i += 1) {
-    const user = getUser(orders[i].user_id);
-    const company = getCompany(user.company_id);
-
+  if (!orders.length) {
     tableBody += `
-      <tr id="order_${orders[i].id}">
-        <td>${orders[i].transaction_id}</td>
-        <td class="user-data">
-          <a class="user-name link" href="#">${formUserFullName(user.first_name, user.last_name, user.gender)}</a>
-          <div class="user-details hidding">
-            ${formUserDetailsBlock(user, company)}
-          </div>
-        </td>
-        <td>${formDate(orders[i].created_at)}</td>
-        <td>$${orders[i].total}</td>
-        <td>${formCardNumber(orders[i].card_number)}</td>
-        <td>${orders[i].card_type}</td>
-        <td>${orders[i].order_country} (${orders[i].order_ip})</td>
-      </tr>`;
+    <tr>
+      <td class="message" colspan="7">Nothing found</td>
+    </tr>
+    `;
+  } else {
+    for (let i = 0; i < orders.length; i += 1) {
+      const user = getUser(orders[i].user_id);
+      const company = getCompany(user.company_id);
+
+      tableBody += `
+        <tr id="order_${orders[i].id}">
+          <td>${orders[i].transaction_id}</td>
+          <td class="user-data">
+            <a class="user-name link" href="#">${formUserFullName(user.first_name, user.last_name, user.gender)}</a>
+            <div class="user-details hidding">
+              ${formUserDetailsBlock(user, company)}
+            </div>
+          </td>
+          <td>${formDate(orders[i].created_at)}</td>
+          <td>${formMoney(orders[i].total)}</td>
+          <td>${formCardNumber(orders[i].card_number)}</td>
+          <td>${orders[i].card_type}</td>
+          <td>${orders[i].order_country} (${orders[i].order_ip})</td>
+        </tr>`;
+    }
   }
 
   document.querySelector('tbody').insertAdjacentHTML('afterbegin', tableBody);
@@ -135,41 +150,46 @@ const renderTableBody = () => {
 const renderTableContent = () => {
   prepareTableBody();
   renderTableBody();
+  setLinkListener();
 };
 
 const renderTableFooter = () => {
+  if (isElementExist('tfoot')) {
+    removeChildren(document.querySelector('tfoot'));
+  } else {
+    document.querySelector('tbody').insertAdjacentHTML('afterend', '<tfoot></tfoot>');
+  }
+
   const numberMergedCells = 6;
 
   let tableFooter = `
-    <tfoot>
       <tr>
         <td colspan=${numberMergedCells}>Orders Count:</td>
-        <td>$ ${statistics.calculateOrdersCount(orders)}</td>
+        <td>${orders.length ? statistics.calculateOrdersCount(orders) : 'n/a'}</td>
       </tr>
       <tr>
         <td colspan=${numberMergedCells}>Orders Total:</td>
-        <td>$ ${statistics.calculateOrdersTotal(orders)}</td>
+        <td>${orders.length ? formMoney(statistics.calculateOrdersTotal(orders)) : 'n/a'}</td>
       </tr>
       <tr>
         <td colspan=${numberMergedCells}>Median Value:</td>
-        <td>$ ${statistics.calculateOrdersMedian(orders)}</td>
+        <td>${orders.length ? formMoney(statistics.calculateOrdersMedian(orders)) : 'n/a'}</td>
       </tr>
       <tr>
         <td colspan=${numberMergedCells}>Average Check:</td>
-        <td>$ ${statistics.calculateOrdersAverage(orders)}</td>
+        <td>${orders.length ? formMoney(statistics.calculateOrdersAverage(orders)) : 'n/a'}</td>
       </tr>
       <tr>
         <td colspan=${numberMergedCells}>Average Check (Female):</td>
-        <td>$ ${statistics.calculateFemaleAverageOrders(orders, users)}</td>
+        <td>${orders.length ? formMoney(statistics.calculateFemaleAverageOrders(orders, users)) : 'n/a'}</td>
       </tr>
       <tr>
         <td colspan=${numberMergedCells}>Average Check (Male):</td>
-        <td>$ ${statistics.calculateMaleAverageOrders(orders, users)}</td>
+        <td>${orders.length ? formMoney(statistics.calculateMaleAverageOrders(orders, users)) : 'n/a'}</td>
       </tr>
-    </tfoot>
   `;
 
-  document.querySelector('tbody').insertAdjacentHTML('afterend', tableFooter);
+  document.querySelector('tfoot').insertAdjacentHTML('afterbegin', tableFooter);
 };
 
 const renderTable = () => {
@@ -199,12 +219,21 @@ const sortDependences = (fields, dependency) => {
     doubleSort(dependency.arr, fields[0], fields[1]);
   }
 
-  orders = dependency['arr'].map(dep => (initialOrders.find(order => order[dependency.key] === dep.id)));
+  const sorted = [];
+
+  dependency['arr'].forEach(dep => {
+    orders.forEach(order => {
+      if (order[dependency.key] === dep.id) {
+        sorted.push(order);
+      };
+    });
+    
+  });
+
+  orders = [...sorted];
 };
 
 const sortOrders = (fields) => {
-  orders = initialOrders.map(el => el);
-
   if (fields.length === 1) {
     singleSort(orders, fields[0])
   } else {
@@ -212,15 +241,43 @@ const sortOrders = (fields) => {
   }
 };
 
-const rerenderTableContent = (sortData) => {
+const sortTableContent = (sortData) => {
   if (sortData.dependency) {
     sortDependences(sortData.fields, sortData.dependency);
   } else {
     sortOrders(sortData.fields);
   }
+};
+
+const inputSearch = (inputStr) => {
+  orders = [...searchOrders(inputStr, initialOrders, users)];
+
+  if (sortedColumn) {
+    sortTableContent(sortedColumn);
+  }
 
   renderTableContent();
-  setLinkListener();
+  renderTableFooter();
+};
+
+const setSearchInputListener = () => {
+  document.querySelector('#search').addEventListener('change', (e) => {
+    const searchStr = e.target.value.trim();
+
+    if (searchStr) {
+      inputSearch((e.target.value).toLowerCase());
+    } 
+    else {
+      orders = [...initialOrders];
+
+      if (sortedColumn) {
+        sortTableContent(sortedColumn);
+      }
+    
+      renderTableContent();
+      renderTableFooter();
+    }
+  });
 };
 
 const setLinkListener = () => {
@@ -234,16 +291,21 @@ const setLinkListener = () => {
 
 const setTableHeaderListener = () => {
   document.querySelector('thead').addEventListener('click', (e) => {
-    const headerEl = e.target.closest('th');
+    const headerEl = e.target;
 
-    if (headerEl.tagName != 'TH' || !headerEl.dataset.sort) return;
-      renderSortIcon(headerEl);
-      rerenderTableContent(sortInf[headerEl.dataset.sort]);
+    if (headerEl.tagName != 'TH' || !headerEl.dataset.sort || sortedColumn === sortInf[headerEl.dataset.sort]) {
+      return;
+    }
+
+    sortedColumn = sortInf[headerEl.dataset.sort];
+    sortTableContent(sortInf[headerEl.dataset.sort]);
+    renderSortIcon(headerEl);
+    renderTableContent();
   });
 };
 
 const setListeners = () => {
-  setLinkListener();
+  setSearchInputListener();
   setTableHeaderListener();
 };
 
@@ -251,5 +313,3 @@ export default (function () {
   renderTable();
   setListeners();
 }());
-
-//q.match(/^\$([\d,.]+)/);

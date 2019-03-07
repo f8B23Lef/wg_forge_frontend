@@ -27,6 +27,15 @@ th[data-sort]:hover {
   opacity: 0.6;
 }
 
+#search {
+  width: 100%;
+}
+
+.message {
+  color: red;
+  text-align: center;
+}
+
 tfoot td {
   font-weight: 700;
   text-align: end;
