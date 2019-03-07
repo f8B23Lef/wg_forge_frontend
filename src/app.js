@@ -1,3 +1,4 @@
+import 'bootstrap';
 import initialOrders from '../data/orders.json';
 import initialUsers from '../data/users.json';
 import initialCompanies from '../data/companies.json';
@@ -53,11 +54,11 @@ let sortedColumn = null;
 
 const renderBlankTableWithHeaders = () => {
   let table = `
-    <table>
+    <table class="table table-bordered table-hover">
       <thead>
-        <tr>
+        <tr class="search">
           <th><label for="search">Search:</label></th>
-          <th colspan="6"><input type="text" id="search" autofocus autocomplete="off"></th>
+          <th colspan="6"><input type="text" class="form-control" id="search" autofocus autocomplete="off"></th>
         </tr>
         <tr>
           <th data-sort="transaction">Transaction ID</th>
