@@ -93,20 +93,20 @@ const formUserDetailsBlock = (user, company) => {
   return birthday.concat(avatar, companyInfo);
 };
 
-const prepareTableBody = () => {
-  if (isElementExist('tbody')) {
-    removeChildren(document.querySelector('tbody'));
-  } else {
-    document.querySelector('thead').insertAdjacentHTML('afterend', '<tbody></tbody>');
-  }
-};
-
 const getUser = (userId) => {
   return users.find(el => el.id === userId);
 };
 
 const getCompany = (companyId) => {
   return companies.find(el => el.id === companyId);
+};
+
+const clearTableBody = () => {
+  if (isElementExist('tbody')) {
+    removeChildren(document.querySelector('tbody'));
+  } else {
+    document.querySelector('thead').insertAdjacentHTML('afterend', '<tbody></tbody>');
+  }
 };
 
 const renderTableBody = () => {
@@ -145,7 +145,7 @@ const renderTableBody = () => {
 };
 
 const renderTableContent = () => {
-  prepareTableBody();
+  clearTableBody();
   renderTableBody();
   setLinkListener();
 };
@@ -199,7 +199,7 @@ const renderSortIcon = (element) => {
   const headers = [...document.querySelectorAll('th')];
 
   headers.forEach((header) => {
-    const sortIconIndex = header.innerHTML.indexOf(' <span>'); // /\s*<span>\&\#8595\;<\/span>/g
+    const sortIconIndex = header.innerHTML.indexOf(' <span>');
 
     if (sortIconIndex !== -1) {
       header.innerHTML = header.innerHTML.slice(0, sortIconIndex);
@@ -224,7 +224,6 @@ const sortDependences = (fields, dependency) => {
         sorted.push(order);
       };
     });
-    
   });
 
   orders = [...sorted];
@@ -247,7 +246,11 @@ const sortTableContent = (sortData) => {
 };
 
 const inputSearch = (inputStr) => {
-  orders = [...searchOrders(inputStr, getInitialOrders(), users)];
+  if (inputStr) {
+    orders = [...searchOrders(inputStr, getInitialOrders(), users)];
+  } else {
+    orders = [...getInitialOrders()];
+  }
 
   if (sortedColumn) {
     sortTableContent(sortedColumn);
@@ -259,21 +262,7 @@ const inputSearch = (inputStr) => {
 
 const setSearchInputListener = () => {
   document.querySelector('#search').addEventListener('change', (e) => {
-    const searchStr = e.target.value.trim();
-
-    if (searchStr) {
-      inputSearch((e.target.value).toLowerCase());
-    } 
-    else {
-      orders = [...getInitialOrders()];
-
-      if (sortedColumn) {
-        sortTableContent(sortedColumn);
-      }
-    
-      renderTableContent();
-      renderTableFooter();
-    }
+    inputSearch(e.target.value.trim().toLowerCase());
   });
 };
 
@@ -295,6 +284,7 @@ const setTableHeaderListener = () => {
     }
 
     sortedColumn = sortInf[headerEl.dataset.sort];
+
     sortTableContent(sortInf[headerEl.dataset.sort]);
     renderSortIcon(headerEl);
     renderTableContent();
